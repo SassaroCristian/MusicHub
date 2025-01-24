@@ -24,6 +24,8 @@ test-results/
 # Icon must end with two \r
 Icon
 
+# Ignore launch settings
+Properties/launchSettings.json
 
 # Thumbnails
 ._*
@@ -403,3 +405,24 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+# Sensitive and environment-specific files
+# Ignore user secrets (local sensitive data)
+.usersecrets/
+
+# Ignore appsettings.json to prevent committing sensitive data
+appsettings.json
+
+# Ignore .env files (if used for environment variables)
+.env
+
+# Ignore compiled assembly files (in case you build .NET projects outside the specified folders)
+*.dll
+*.exe
+*.pdb
+*.vshost.exe
+*.suo
+
+# Ignore temporary files (e.g., from editors or tools)
+*.swp
+*.swn
