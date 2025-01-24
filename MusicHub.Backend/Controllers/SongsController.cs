@@ -5,7 +5,7 @@ using MusicHub.Backend.Models;
 
 namespace MusicHub.Backend.Controllers
 {
-    [Route("api/_[controller")]
+    [Route("api/[controller]")]
     [ApiController]
     public class SongsController : ControllerBase
     {
