@@ -28,11 +28,12 @@ namespace MusicHub.Backend.Controllers
                 return Redirect("/error");
 			}
 
-            // Example: Access the Spotify token
+            // Access the Spotify token
             var accessToken = authenticateResult.Properties.GetTokenValue("access_token");
             var refreshToken = authenticateResult.Properties.GetTokenValue("refresh_Token");
             var expirationTime = authenticateResult.Properties.GetTokenValue("expires_at");
 
+            // Store the tokens in session or database (example here stores them in session)
             HttpContext.Session.SetString("AccessToken", accessToken);
             HttpContext.Session.SetString("RefreshToken", refreshToken);
             HttpContext.Session.SetString("ExpirationTime", expirationTime);
