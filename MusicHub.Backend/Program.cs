@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OAuth; // Add this to support OAuth
+using Microsoft.AspNetCore.Authentication.OAuth; 
 using Microsoft.EntityFrameworkCore;
 using MusicHub.Backend.Data;
+using MusicHub.Backend.Models;
+using MusicHub.Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +13,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 );
 
 // Add other services
+builder.Services.AddSingleton<SpotifyService>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(120); // Session expiration time
+});
 
+builder.Services.Configure<SpotifySettings>(
+    builder.Configuration.GetSection("Spotify")
+);
 // Add Authentication with Spotify OAuth
 builder.Services.AddAuthentication(options =>
 {
