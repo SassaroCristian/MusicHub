@@ -48,23 +48,22 @@ namespace MusicHub.Backend.Services
                 throw new InvalidOperationException("Refresh token is missing.");
             }
 
-            // Send a request to Spotify's API to get a new access token
+            // Use injected _httpClient instead of creating a new instance
             var requestContent = new FormUrlEncodedContent(new[]
             {
-            new KeyValuePair<string, string>("grant_type", "refresh_token"),
-            new KeyValuePair<string, string>("refresh_token", refreshToken),
-            new KeyValuePair<string, string>("client_id", "<your_client_id>"),
-            new KeyValuePair<string, string>("client_secret", "<your_client_secret>")
-        });
+                new KeyValuePair<string, string>("grant_type", "refresh_token"),
+                new KeyValuePair<string, string>("refresh_token", refreshToken),
+                new KeyValuePair<string, string>("client_id", "<your_client_id>"),
+                new KeyValuePair<string, string>("client_secret", "<your_client_secret>")
+             });
 
             var response = await _httpClient.PostAsync("https://accounts.spotify.com/api/token", requestContent);
 
             if (response.IsSuccessStatusCode)
             {
                 var data = await response.Content.ReadAsStringAsync();
-                // Parse the JSON response and extract the new access token and expiration time
                 var tokenData = JsonSerializer.Deserialize<Dictionary<string, string>>(data);
-                // Check for missing keys
+
                 if (tokenData == null || !tokenData.ContainsKey("access_token") || !tokenData.ContainsKey("expires_in"))
                 {
                     throw new Exception("Failed to retrieve valid token data.");
@@ -73,7 +72,7 @@ namespace MusicHub.Backend.Services
                 var newAccessToken = tokenData["access_token"];
                 var newExpirationTime = DateTime.UtcNow.AddSeconds(int.Parse(tokenData["expires_in"]));
 
-                // Store the new access token and expiration time
+                // Store new token and expiration time
                 _httpContextAccessor.HttpContext?.Session.SetString("AccessToken", newAccessToken);
                 _httpContextAccessor.HttpContext?.Session.SetString("ExpiresAt", newExpirationTime.ToString());
 

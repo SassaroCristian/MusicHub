@@ -21,7 +21,10 @@ namespace MusicHub.Backend.Controllers
                 return Unauthorized();
             }
 			var accessToken = authenticateResult.Properties.GetTokenValue("access_token");
+			var refreshToken = authenticateResult.Properties.GetTokenValue("refresh_token");
+
             HttpContext.Session.SetString("AccessToken", accessToken);
+            HttpContext.Session.SetString("RefreshToken", refreshToken);
             return RedirectToAction("Index", "Home");
         }
 	}
