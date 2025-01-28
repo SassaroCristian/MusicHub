@@ -8,16 +8,17 @@ namespace MusicHub.Backend.Services
 
         public SpotifyService(IHttpContextAccessor httpContextAccessor, HttpClient httpClient)
         {
-            _httpContextAccessor = httpContextAccessor;
-            _httpClient = httpClient;
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(HttpContextAccessor));
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
-        public string GetAccessToken()
+        public async Task<string> GetAccessTokenAsync()
         {
-            var accessToken = _httpContextAccessor.HttpContext.Session.GetString("AccessToken");
+            var accessToken = _httpContextAccessor.HttpContext?.Session.GetString("AccessToken");
 
-            if (string.IsNullOrEmpty(accessToken))
+            if (accessToken == null)
             {
+                // Handle the case where the access token is missing, maybe throw an exception or return a default value
                 throw new InvalidOperationException("Access token is missing.");
             }
 
@@ -25,13 +26,13 @@ namespace MusicHub.Backend.Services
             var expirationTime = GetTokenExpirationTime();
             if (DateTime.UtcNow > expirationTime)
             {
-                accessToken = RefreshAccessToken();
+                accessToken = await RefreshAccessTokenAsync();
             }
 
             return accessToken;
         }
 
-        private string RefreshAccessToken()
+        private async Task<string> RefreshAccessTokenAsync()
         {
             var refreshToken = GetRefreshToken();
 
@@ -49,19 +50,25 @@ namespace MusicHub.Backend.Services
             new KeyValuePair<string, string>("client_secret", "<your_client_secret>")
         });
 
-            var response = _httpClient.PostAsync("https://accounts.spotify.com/api/token", requestContent).Result;
+            var response = await _httpClient.PostAsync("https://accounts.spotify.com/api/token", requestContent);
 
             if (response.IsSuccessStatusCode)
             {
-                var data = response.Content.ReadAsStringAsync().Result;
+                var data = await response.Content.ReadAsStringAsync();
                 // Parse the JSON response and extract the new access token and expiration time
                 var tokenData = JsonSerializer.Deserialize<Dictionary<string, string>>(data);
+                // Check for missing keys
+                if (tokenData == null || !tokenData.ContainsKey("access_token") || !tokenData.ContainsKey("expires_in"))
+                {
+                    throw new Exception("Failed to retrieve valid token data.");
+                }
+
                 var newAccessToken = tokenData["access_token"];
                 var newExpirationTime = DateTime.UtcNow.AddSeconds(int.Parse(tokenData["expires_in"]));
 
                 // Store the new access token and expiration time
-                _httpContextAccessor.HttpContext.Session.SetString("AccessToken", newAccessToken);
-                _httpContextAccessor.HttpContext.Session.SetString("ExpiresAt", newExpirationTime.ToString());
+                _httpContextAccessor.HttpContext?.Session.SetString("AccessToken", newAccessToken);
+                _httpContextAccessor.HttpContext?.Session.SetString("ExpiresAt", newExpirationTime.ToString());
 
                 return newAccessToken;
             }
@@ -71,19 +78,26 @@ namespace MusicHub.Backend.Services
 
         private string GetRefreshToken()
         {
-            return _httpContextAccessor.HttpContext.Session.GetString("RefreshToken");
+            var refreshToken = _httpContextAccessor.HttpContext?.Session.GetString("RefreshToken");
+
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                throw new InvalidOperationException("Refresh token is missing.");
+            }
+
+            return refreshToken;
         }
 
         public DateTime GetTokenExpirationTime()
-        {
-            var expirationTime = _httpContextAccessor.HttpContext.Session.GetString("ExpiresAt");
+{
+    var expirationTime = _httpContextAccessor.HttpContext?.Session.GetString("ExpiresAt");
 
-            if (string.IsNullOrEmpty(expirationTime))
-            {
-                throw new InvalidOperationException("Token expiration time is missing.");
-            }
+    if (string.IsNullOrEmpty(expirationTime))
+    {
+        throw new InvalidOperationException("Token expiration time is missing.");
+    }
 
-            return DateTime.Parse(expirationTime);
-        }
+    return DateTime.Parse(expirationTime);
+}
     }
 }

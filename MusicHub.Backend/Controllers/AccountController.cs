@@ -34,9 +34,9 @@ namespace MusicHub.Backend.Controllers
             var expirationTime = authenticateResult.Properties.GetTokenValue("expires_at");
 
             // Store the tokens in session or database (example here stores them in session)
-            HttpContext.Session.SetString("AccessToken", accessToken);
-            HttpContext.Session.SetString("RefreshToken", refreshToken);
-            HttpContext.Session.SetString("ExpirationTime", expirationTime);
+            HttpContext.Session.SetString("AccessToken", accessToken ?? string.Empty);
+            HttpContext.Session.SetString("RefreshToken", refreshToken ?? string.Empty);
+            HttpContext.Session.SetString("ExpirationTime", expirationTime ?? string.Empty);
             // You can store the token or redirect users to the main app
             return RedirectToAction("Index", "Home");
 		}
