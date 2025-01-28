@@ -1,15 +1,21 @@
-﻿using System.Text.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+
 namespace MusicHub.Backend.Services
 {
     public class SpotifyService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly HttpClient _httpClient;
+        private readonly ILogger<SpotifyService> _logger;
 
-        public SpotifyService(IHttpContextAccessor httpContextAccessor, HttpClient httpClient)
+        public SpotifyService(IHttpContextAccessor httpContextAccessor, HttpClient httpClient, ILogger<SpotifyService> logger)
         {
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(HttpContextAccessor));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<string> GetAccessTokenAsync()
@@ -89,15 +95,37 @@ namespace MusicHub.Backend.Services
         }
 
         public DateTime GetTokenExpirationTime()
-{
-    var expirationTime = _httpContextAccessor.HttpContext?.Session.GetString("ExpiresAt");
+        {
+            var expirationTime = _httpContextAccessor.HttpContext?.Session.GetString("ExpiresAt");
 
-    if (string.IsNullOrEmpty(expirationTime))
-    {
-        throw new InvalidOperationException("Token expiration time is missing.");
-    }
+            if (string.IsNullOrEmpty(expirationTime))
+            {
+                throw new InvalidOperationException("Token expiration time is missing.");
+            }
 
-    return DateTime.Parse(expirationTime);
-}
+            return DateTime.Parse(expirationTime);
+        }
+        // fetch songs by genre
+        public async Task<JObject> GetSongsByGenreAsync(string genre)
+        {
+            var accessToken = await GetAccessTokenAsync();
+            var endpoint = $"https://api.spotify.com/v1/recommendations?seed_genres={genre}&limit=10";
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            var response = await _httpClient.GetStringAsync(endpoint);
+            var jsonResponse = JObject.Parse(response);
+
+            return jsonResponse;
+        }
+        // Fetch user playlists
+        public async Task<JObject> GetUserPlaylistsAsync()
+        {
+            var accessToken = await GetAccessTokenAsync();
+            var endpoint = "https://api.spotify.com/v1/me/playlists";
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            var response = await _httpClient.GetStringAsync(endpoint);
+            var jsonResponse = JObject.Parse(response);
+            return jsonResponse;
+
+        }
     }
 }
