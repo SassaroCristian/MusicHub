@@ -6,16 +6,18 @@ namespace MusicHub.Backend.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-           : base(options)
-        {
-        }
-    
+        
 
+        public DbSet<UserPreference> UserPreference { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Songs> Songs { get; set; }
         public DbSet<SpotifySettings> SpotifySettings { get; set; }
         public DbSet<Playlist> Playlists { get; set; }
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+           : base(options)
+        {
+        }
 
         // Configuring relationships and other settings.
         protected override void OnModelCreating(ModelBuilder modelBuilder)
